@@ -72,7 +72,7 @@
 
 ## Manufacturing
 
-> Nike factory mints product on blockchain:
+> Factory mints product on blockchain:
 
 registerProduct(productId, "Nike Air Max 2025", factoryAddress)
 
@@ -86,7 +86,7 @@ registerProduct(productId, "Nike Air Max 2025", factoryAddress)
 updateStatus(productId, "Shipped to warehouse")
 
 
-> Event emitted → backend listens → updates DB → notifies Nike ops team.
+> Event emitted → backend listens → updates DB → notifies Factory ops team.
 
 - Warehouse to Store
 
@@ -115,27 +115,27 @@ updateStatus(productId, "Shipped to warehouse")
 # 5. Diagram
 
 ### Supply Chain Tracking System – Architecture Diagram ###
-                   ┌──────────────────────────┐
+                   ┌────────────────────────── ┐
                    │        Customers          │
                    │  (Scan QR / Verify Shoe)  │
                    └───────────▲───────────────┘
                                │
-                   ┌───────────┴───────────────┐
+                   ┌───────────┴─────────────── ┐
                    │     Retailers / Stores     │
                    │ (Log Sale / Track Product) │
-                   └───────────▲───────────────┘
+                   └───────────▲─────────────── ┘
                                │
-                   ┌───────────┴───────────────┐
+                   ┌───────────┴─────────────── ┐
                    │ Logistics & Warehouses     │
                    │ (Update Shipment Status)   │
-                   └───────────▲───────────────┘
+                   └───────────▲─────────────── ┘
                                │
-                   ┌───────────┴───────────────┐
-                   │     Manufacturer (Nike)    │
+                   ┌───────────┴─────────────── ┐
+                   │     Manufacturer (Factory)    │
                    │ (Register Product On-Chain)│
-                   └───────────▲───────────────┘
+                   └───────────▲─────────────── ┘
                                │
-               ┌───────────────┴─────────────────┐
+               ┌───────────────┴───────────────── ┐
                │       Java Backend (API)         │
                │  Spring Boot 3.x                 │
                │  - Controllers (REST APIs)       │
@@ -143,9 +143,9 @@ updateStatus(productId, "Shipped to warehouse")
                │  - Web3j (Blockchain Connector)  │
                │  - DB (Product Metadata, Users)  │
                │  - Event Listener (Sync Events)  │
-               └───────────────▲─────────────────┘
+               └───────────────▲───────────────── ┘
                                │
-                   ┌───────────┴───────────────┐
+                   ┌───────────┴─────────────── ┐
                    │  Ethereum / Blockchain     │
                    │  - SupplyChain.sol         │
                    │  - Events.sol              │
