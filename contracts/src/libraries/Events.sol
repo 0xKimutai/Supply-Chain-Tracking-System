@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.24;
+pragma solidity 0.8.^19;
 
 /// @title Supply Chain Events Library
 /// @notice Centralized event definitions for supply chain operations
