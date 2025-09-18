@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.^19;
+pragma solidity 0.8.24;
 
 /// @title Supply Chain Interface
 /// @notice Defines the standard interface for supply chain tracking contracts

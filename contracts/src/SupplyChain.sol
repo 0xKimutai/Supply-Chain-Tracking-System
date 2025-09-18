@@ -1,20 +1,15 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.19;
+pragma solidity 0.8.24;
 
-import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
+import { AccessControlUpgradeable } from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
+import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import { PausableUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
+import { ReentrancyGuardUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 
 /// @title Supply Chain Tracking System
 /// @notice Tracks products through supply chain with role-based access control
 /// @dev Implements upgradeable pattern with comprehensive access controls
-contract SupplyChain is 
-    Initializable, 
-    AccessControlUpgradeable, 
-    PausableUpgradeable, 
-    ReentrancyGuardUpgradeable 
-{
+contract SupplyChain is Initializable, AccessControlUpgradeable, PausableUpgradeable, ReentrancyGuardUpgradeable {
     // Custom errors for gas efficiency
     error ProductAlreadyExists(bytes32 productId);
     error ProductNotFound(bytes32 productId);
@@ -30,21 +25,22 @@ contract SupplyChain is
 
     // Product status enumeration
     enum ProductStatus {
-        Created,        // 0 - Just manufactured
-        InTransit,      // 1 - Being shipped
-        AtDistributor,  // 2 - At distribution center
-        AtRetailer,     // 3 - At retail location
-        Sold           // 4 - Sold to end consumer
+        Created, // 0 - Just manufactured
+        InTransit, // 1 - Being shipped
+        AtDistributor, // 2 - At distribution center
+        AtRetailer, // 3 - At retail location
+        Sold // 4 - Sold to end consumer
+
     }
 
     // Optimized struct for storage efficiency (fits in 2 storage slots)
     struct Product {
-        address owner;          // 20 bytes
-        uint32 createdAt;       // 4 bytes (packed with address)
-        uint32 lastUpdated;     // 4 bytes
-        ProductStatus status;   // 1 byte (packed)
-        bool exists;           // 1 byte (packed)
-        string metadata;       // Dynamic - separate slot
+        address owner; // 20 bytes
+        uint32 createdAt; // 4 bytes (packed with address)
+        uint32 lastUpdated; // 4 bytes
+        ProductStatus status; // 1 byte (packed)
+        bool exists; // 1 byte (packed)
+        string metadata; // Dynamic - separate slot
     }
 
     struct TrackingEvent {
@@ -57,36 +53,20 @@ contract SupplyChain is
     // State variables
     mapping(bytes32 => Product) private products;
     mapping(bytes32 => TrackingEvent[]) private trackingHistory;
-    
+
     // Events with proper indexing for efficient filtering
-    event ProductCreated(
-        bytes32 indexed productId,
-        address indexed manufacturer,
-        string metadata,
-        uint256 timestamp
-    );
+    event ProductCreated(bytes32 indexed productId, address indexed manufacturer, string metadata, uint256 timestamp);
 
     event ProductTransferred(
-        bytes32 indexed productId,
-        address indexed from,
-        address indexed to,
-        ProductStatus status,
-        uint256 timestamp
+        bytes32 indexed productId, address indexed from, address indexed to, ProductStatus status, uint256 timestamp
     );
 
     event LocationUpdated(
-        bytes32 indexed productId,
-        address indexed updatedBy,
-        string location,
-        ProductStatus status,
-        uint256 timestamp
+        bytes32 indexed productId, address indexed updatedBy, string location, ProductStatus status, uint256 timestamp
     );
 
     event StatusChanged(
-        bytes32 indexed productId,
-        ProductStatus indexed oldStatus,
-        ProductStatus indexed newStatus,
-        uint256 timestamp
+        bytes32 indexed productId, ProductStatus indexed oldStatus, ProductStatus indexed newStatus, uint256 timestamp
     );
 
     /// @notice Initialize the contract (replaces constructor for upgradeable contracts)
@@ -95,7 +75,7 @@ contract SupplyChain is
         __AccessControl_init();
         __Pausable_init();
         __ReentrancyGuard_init();
-        
+
         _grantRole(DEFAULT_ADMIN_ROLE, admin);
         _grantRole(MANUFACTURER_ROLE, admin);
     }
@@ -103,10 +83,11 @@ contract SupplyChain is
     /// @notice Create a new product in the supply chain
     /// @param productId Unique identifier for the product
     /// @param metadata IPFS hash or JSON string with product details
-    function createProduct(
-        bytes32 productId,
-        string calldata metadata
-    ) external whenNotPaused onlyRole(MANUFACTURER_ROLE) {
+    function createProduct(bytes32 productId, string calldata metadata)
+        external
+        whenNotPaused
+        onlyRole(MANUFACTURER_ROLE)
+    {
         if (products[productId].exists) {
             revert ProductAlreadyExists(productId);
         }
@@ -115,7 +96,7 @@ contract SupplyChain is
         }
 
         uint32 timestamp = uint32(block.timestamp);
-        
+
         products[productId] = Product({
             owner: msg.sender,
             createdAt: timestamp,
@@ -126,12 +107,14 @@ contract SupplyChain is
         });
 
         // Add initial tracking event
-        trackingHistory[productId].push(TrackingEvent({
-            updatedBy: msg.sender,
-            location: "Manufacturing Facility",
-            timestamp: timestamp,
-            status: ProductStatus.Created
-        }));
+        trackingHistory[productId].push(
+            TrackingEvent({
+                updatedBy: msg.sender,
+                location: "Manufacturing Facility",
+                timestamp: timestamp,
+                status: ProductStatus.Created
+            })
+        );
 
         emit ProductCreated(productId, msg.sender, metadata, block.timestamp);
     }
@@ -140,13 +123,13 @@ contract SupplyChain is
     /// @param productId Product to update
     /// @param location New location description
     /// @param newStatus New status of the product
-    function updateLocation(
-        bytes32 productId,
-        string calldata location,
-        ProductStatus newStatus
-    ) external whenNotPaused nonReentrant {
+    function updateLocation(bytes32 productId, string calldata location, ProductStatus newStatus)
+        external
+        whenNotPaused
+        nonReentrant
+    {
         Product storage product = products[productId];
-        
+
         if (!product.exists) {
             revert ProductNotFound(productId);
         }
@@ -162,15 +145,17 @@ contract SupplyChain is
         product.lastUpdated = uint32(block.timestamp);
 
         // Add tracking event
-        trackingHistory[productId].push(TrackingEvent({
-            updatedBy: msg.sender,
-            location: location,
-            timestamp: uint32(block.timestamp),
-            status: newStatus
-        }));
+        trackingHistory[productId].push(
+            TrackingEvent({
+                updatedBy: msg.sender,
+                location: location,
+                timestamp: uint32(block.timestamp),
+                status: newStatus
+            })
+        );
 
         emit LocationUpdated(productId, msg.sender, location, newStatus, block.timestamp);
-        
+
         if (oldStatus != newStatus) {
             emit StatusChanged(productId, oldStatus, newStatus, block.timestamp);
         }
@@ -179,12 +164,9 @@ contract SupplyChain is
     /// @notice Transfer product ownership
     /// @param productId Product to transfer
     /// @param newOwner New owner address
-    function transferOwnership(
-        bytes32 productId,
-        address newOwner
-    ) external whenNotPaused {
+    function transferOwnership(bytes32 productId, address newOwner) external whenNotPaused {
         Product storage product = products[productId];
-        
+
         if (!product.exists) {
             revert ProductNotFound(productId);
         }
@@ -224,28 +206,28 @@ contract SupplyChain is
     /// @param currentStatus Current product status
     /// @param newStatus Desired new status
     /// @return bool Whether the transition is allowed
-    function _canUpdateStatus(
-        address caller,
-        ProductStatus currentStatus,
-        ProductStatus newStatus
-    ) private view returns (bool) {
+    function _canUpdateStatus(address caller, ProductStatus currentStatus, ProductStatus newStatus)
+        private
+        view
+        returns (bool)
+    {
         // Manufacturers can move from Created to InTransit
         if (hasRole(MANUFACTURER_ROLE, caller)) {
             return currentStatus == ProductStatus.Created && newStatus == ProductStatus.InTransit;
         }
-        
+
         // Distributors can update InTransit and AtDistributor
         if (hasRole(DISTRIBUTOR_ROLE, caller)) {
-            return (currentStatus == ProductStatus.InTransit && newStatus == ProductStatus.AtDistributor) ||
-                   (currentStatus == ProductStatus.AtDistributor && newStatus == ProductStatus.InTransit);
+            return (currentStatus == ProductStatus.InTransit && newStatus == ProductStatus.AtDistributor)
+                || (currentStatus == ProductStatus.AtDistributor && newStatus == ProductStatus.InTransit);
         }
-        
+
         // Retailers can update AtRetailer and Sold
         if (hasRole(RETAILER_ROLE, caller)) {
-            return (currentStatus == ProductStatus.InTransit && newStatus == ProductStatus.AtRetailer) ||
-                   (currentStatus == ProductStatus.AtRetailer && newStatus == ProductStatus.Sold);
+            return (currentStatus == ProductStatus.InTransit && newStatus == ProductStatus.AtRetailer)
+                || (currentStatus == ProductStatus.AtRetailer && newStatus == ProductStatus.Sold);
         }
-        
+
         return false;
     }
 
